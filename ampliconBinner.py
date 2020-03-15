@@ -67,22 +67,38 @@ def demultiplex_barcoded_pcr(in_barcode_fasta_file, amplicon_seq_fasta_file, in_
 
     extract_fastq_tail_seq (in_fastq_file, read_tail_length, min_read_length, max_read_length, left_tail_fastq_file, right_tail_fastq_file)
 
-    left_tail_sam_file  = os.path.join(out_dir, '%s.left%dbp_tail.sam'   % (in_fastq_file_prefix, read_tail_length))
-    right_tail_sam_file = os.path.join(out_dir, '%s.right%dbp_tail.sam'  % (in_fastq_file_prefix, read_tail_length))
+    ll_tail_sam_file = os.path.join(out_dir, '%s.left%dbp_tail.aligned_to_left.sam'   % (in_fastq_file_prefix, read_tail_length))
+    lr_tail_sam_file = os.path.join(out_dir, '%s.left%dbp_tail.aligned_to_right.sam'   % (in_fastq_file_prefix, read_tail_length))
+    rr_tail_sam_file = os.path.join(out_dir, '%s.right%dbp_tail.aligned_to_right.sam' % (in_fastq_file_prefix, read_tail_length))
+    rl_tail_sam_file = os.path.join(out_dir, '%s.right%dbp_tail.aligned_to_left.sam' % (in_fastq_file_prefix, read_tail_length))
 
-    cmd = 'minimap2 -N 100 --cs -t %d -a -x map-ont %s %s > %s' % (n_threads, left_barcode_plus_seq_file, left_tail_fastq_file, left_tail_sam_file)
+    cmd = 'minimap2 -N 100 --cs -t %d -a -x map-ont %s %s > %s' % (n_threads, left_barcode_plus_seq_file, left_tail_fastq_file, ll_tail_sam_file)
     print('running command: %s' % cmd)
     os.system(cmd)
 
-    cmd = 'minimap2 -N 100 --cs -t %d -a -x map-ont %s %s > %s' % (n_threads, right_barcode_plus_seq_file, right_tail_fastq_file, right_tail_sam_file)
+    cmd = 'minimap2 -N 100 --cs -t %d -a -x map-ont %s %s > %s' % (n_threads, right_barcode_plus_seq_file, left_tail_fastq_file, lr_tail_sam_file)
     print('running command: %s' % cmd)
     os.system(cmd)
 
+    cmd = 'minimap2 -N 100 --cs -t %d -a -x map-ont %s %s > %s' % (n_threads, right_barcode_plus_seq_file, right_tail_fastq_file, rr_tail_sam_file)
+    print('running command: %s' % cmd)
+    os.system(cmd)
 
-    left_tail_sam_read_barcode_idx_dict  = extract_confident_reads_from_sam (left_tail_sam_file, barcode_length, barcode_plus_seq_to_barcode_idx_dict)
+    cmd = 'minimap2 -N 100 --cs -t %d -a -x map-ont %s %s > %s' % (n_threads, left_barcode_plus_seq_file, right_tail_fastq_file, rl_tail_sam_file)
+    print('running command: %s' % cmd)
+    os.system(cmd)
 
-    right_tail_sam_read_barcode_idx_dict = extract_confident_reads_from_sam (right_tail_sam_file, barcode_length, barcode_plus_seq_to_barcode_idx_dict)
+    left_tail_sam_read_barcode_idx_dict = dict()
+    right_tail_sam_read_barcode_idx_dict = dict()
 
+    extract_confident_reads_from_sam (ll_tail_sam_file, barcode_length, barcode_plus_seq_to_barcode_idx_dict, left_tail_sam_read_barcode_idx_dict)
+
+    extract_confident_reads_from_sam (rr_tail_sam_file, barcode_length, barcode_plus_seq_to_barcode_idx_dict, right_tail_sam_read_barcode_idx_dict)
+
+    extract_confident_reads_from_sam (rl_tail_sam_file, barcode_length, barcode_plus_seq_to_barcode_idx_dict, left_tail_sam_read_barcode_idx_dict)
+
+    extract_confident_reads_from_sam (lr_tail_sam_file, barcode_length, barcode_plus_seq_to_barcode_idx_dict, right_tail_sam_read_barcode_idx_dict)
+    
     read_to_sample_id_file = os.path.join(out_dir, '%s.%dbp_tail.read_to_sample_id.txt'   % (in_fastq_file_prefix, read_tail_length))
     barcode_key_to_sample_id_dict, sample_id_to_barcode_key_dict, readname_to_sample_id_dict, each_sample_read_count_list = output_read_to_sample_id_file (barcode_name_list, left_tail_sam_read_barcode_idx_dict, right_tail_sam_read_barcode_idx_dict, read_to_sample_id_file)
 
@@ -229,9 +245,8 @@ def generate_barcode_plus_tail_file(barcode_name_list, barcode_seq_list, amplico
 
     return barcode_plus_seq_to_barcode_idx_dict
 
-def extract_confident_reads_from_sam (in_sam_file, barcode_length, barcode_plus_seq_to_barcode_idx_dict):
+def extract_confident_reads_from_sam (in_sam_file, barcode_length, barcode_plus_seq_to_barcode_idx_dict, read_barcode_idx_dict):
 
-    read_barcode_idx_dict = dict()
     min_mapq = 20
 
     in_sam_fp = open(in_sam_file, 'r')
@@ -278,7 +293,7 @@ def extract_confident_reads_from_sam (in_sam_file, barcode_length, barcode_plus_
 
     print('STATISTICS: sam_file = %s, num_aligned_reads = %d, num_unmapped_reads = %d, num_of_confident_reads = %d' % (in_sam_file, num_aligned_reads, num_unmapped_reads, len(read_barcode_idx_dict) ))
 
-    return read_barcode_idx_dict
+    return 
 
 def extract_fastq_tail_seq(in_fastq_file, read_tail_length, min_read_length, max_read_length, left_tail_fastq_file, right_tail_fastq_file):
 
