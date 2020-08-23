@@ -76,34 +76,20 @@ If you have multiple fastq files, you can supply a list file with `--in_fq_list`
 `--fwd_barcode_fasta` and `--rev_barcode_fasta` are barcode sequences in FASTA format. If you use the same barcodes on both ends, you can supply `--fwd_barcode_fasta` and `--rev_barcode_fasta` with the same file. An example of `--fwd_barcode_fasta` is shown below. We supplied FASTA files of official barcodes in the `AmpBinner/ONT_barcodes` folder.  
 
 ```
->NB01
+>BC01
 CACAAAGACACCGACAACTTTCTT
->NB02
+>BC02
 ACAGACGACTACAAACGGAATCGA
->NB03
+>BC03
 CCTGGTAACTGGGACACAAGACTC
->NB04
+>BC04
 TAGGGAAACACGATAGAATCCGAA
->NB05
+>BC05
 AAGGTTACACAAACCCTGGACAAG
->NB06
-GACTACTTTCTGCCTTTGCGAGAA
->NB07
-AAGGATTCATTCCCACGGTAACAC
->NB08
-ACGTAACTTGGTTTGTTCCCTGAA
->NB09
-AACCAAGACTCGCTGTGCCTAGTT
->NB10
-GAGAGGACAAAGGTTTCAACGCTT
->NB11
-TCCATTCCCTCCGATAGATGAAAC
->NB12
-TCCGATTCTGCTTCTTTCTACCTG
 ```
 
 `ampBinner.py` supports different barcoding strategies.  
-#### Case 1. If you only add barcodes on forward primer
+#### Case 1. The barcode is beside forward primer
 
 In this case, the amplicon structure is shown below. 
 <p align="center"><img src="images/fwd_only.png" width="100%"></p>
@@ -114,7 +100,7 @@ You can use the `--fwd_barcode_fasta` argument to supply the barcode FASTA file 
 /home/fangl/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --fwd_barcode_fasta example_barcodes.fasta --minimap2 /home/fangl/software/minimap2-2.8_x64-linux/minimap2
 ```
 
-#### Case 2. If you only add barcodes on reverse primer
+#### Case 2. The barcode is beside reverse primer
 In this case, the amplicon structure is shown below. 
 <p align="center"><img src="images/rev_only.png" width="100%"></p>
 
@@ -122,6 +108,26 @@ Similar to case 1, you can use the `--rev_barcode_fasta` argument to supply the 
 
 ```
 /home/fangl/git_repo/push/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --rev_barcode_fasta example_barcodes.fasta --minimap2 /mnt/isilon/wang_lab/fangli/software/minimap2-2.8_x64-linux/minimap2
+```
+
+#### Case 3. The barcodes are on both ends. One sample have the same barcodes on both ends. Only one barcode is required to bin the reads.
+This might be the most common case. In this case, the amplicon structure is shown below. 
+<p align="center"><img src="images/both_sides.png" width="100%"></p>
+
+You can supply `--fwd_barcode_fasta` and `--rev_barcode_fasta` with the same file, and use the `--amp_seq_fasta` argument to supply reference amplicon FASTA file. Please note that **the `--amp_seq_fasta` file should INCLUDE the primer sequence but EXCLUDE the barcode sequence**.  An example command is shown below: 
+
+```
+/home/fangl/git_repo/push/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --fwd_barcode_fasta example_barcodes.fasta --rev_barcode_fasta example_barcodes.fasta --minimap2 /mnt/isilon/wang_lab/fangli/software/minimap2-2.8_x64-linux/minimap2
+```
+
+#### Case 4. The barcodes are on both ends. One sample may or may not have the same barcodes on both ends. Two barcodes are required to bin the reads.
+This might be the most common case. In this case, the amplicon structure is shown below. 
+<p align="center"><img src="images/both_sides.png" width="100%"></p>
+
+You can supply `--fwd_barcode_fasta` and `--rev_barcode_fasta` with the barcode FASTA file. The `--fwd_barcode_fasta` and `--rev_barcode_fasta` file may or may not be the same. **You want to use the `--require_two_barcodes` option to specify that two barcodes are required to bin the reads.**  You can use the `--amp_seq_fasta` argument to supply reference amplicon FASTA file. Please note that **the `--amp_seq_fasta` file should INCLUDE the primer sequence but EXCLUDE the barcode sequence**.  An example command is shown below: 
+
+```
+/home/fangl/git_repo/push/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --fwd_barcode_fasta example_barcodes.fasta --rev_barcode_fasta example_barcodes.fasta --require_two_barcodes --minimap2 /mnt/isilon/wang_lab/fangli/software/minimap2-2.8_x64-linux/minimap2
 ```
 
 
