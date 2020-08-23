@@ -1,5 +1,5 @@
 # AmpBinner
-A barcode demultiplexer for Oxford Nanopore long-read amplicon sequencing data. It can demultiplex regular amplicon sequencing data as well as sequencing data generated from 10X Genomics single cell libraries. 
+A barcode demultiplexer for Oxford Nanopore long-read amplicon sequencing data. It supports multiple barcoding strategy and can demultiplex regular amplicon sequencing data as well as sequencing data generated from 10X Genomics single cell libraries. 
 
 ## <a name="Requirements"></a>Requirements
 - Linux or macOS
