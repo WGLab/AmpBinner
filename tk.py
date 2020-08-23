@@ -244,7 +244,7 @@ def analysis_cigar_string (cigar):
 
 def run_system_cmd(cmd):
 
-    eprint(f'CMD: {cmd}')
+    eprint('CMD: %s' % cmd)
     ret = os.system(cmd)
     if ret != 0: 
         eprint('ERROR: Failed to run command: %s' % cmd)
