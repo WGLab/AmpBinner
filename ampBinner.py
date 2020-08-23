@@ -34,8 +34,6 @@ import gzip
 import argparse
 from multiprocessing import Process
 import random
-import scipy
-from scipy import stats
 
 import tk
 
