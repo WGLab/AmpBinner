@@ -1,10 +1,10 @@
-# AmpBinner
-A barcode demultiplexer for Oxford Nanopore long-read amplicon sequencing data. 
+# AmpBinner: An anchor-assisted demultiplexing tool for Oxford Nanopore long-read amplicon sequencing data. 
 
 ## Features
-- AmpBinner uses the sequence upstream/downstream of the barcode to help locate barcode position and eliminates random matching due to sequencing error.
+- AmpBinner uses the sequence upstream/downstream of the barcode (i.e. anchor) to help locate barcode position and eliminates random matching due to sequencing error.
 - AmpBinner does not require a pretrained model for demultiplexing and supports officially provided barcodes as well as custom-designed barcodes.
-- AmpBinner is able to demultiplex Oxford Nanopore sequencing data generated from **10X Genomics Chromium single cell libraries**. 
+- AmpBinner is able to demultiplex Oxford Nanopore sequencing data generated from **10X Genomics Chromium Single Cell 3ʹ Gene Expression Libraries**. 
+
 
 ## <a name="Requirements"></a>Requirements
 - Operating system: Linux or macOS
@@ -30,7 +30,7 @@ The scripts in the `./AmpBinner` can run directly without additional compilation
 
 ## <a name="Usage"></a>Usage
 
-There are two script files in the `AmpBinner` directory. `ampBinner_10X.py` is used to demultiplex Oxford Nanopore sequencing data derived from 10X Genomics Chromium single cell libraries. There are usually tens of thousands of barcodes per sample.  `ampBinner.py` is for regular barcoding methods, including barcoding kits provided by Oxford Nanopore Technologies and custom-designed barcodes.
+There are two script files in the `AmpBinner` directory. `ampBinner_10X.py` is used to demultiplex Oxford Nanopore sequencing data derived from 10X Genomics Chromium single cell libraries. There are usually several thousands of barcodes per sample.  `ampBinner.py` is for regular barcoding methods, including barcoding kits provided by Oxford Nanopore Technologies and custom-designed barcodes.
 
 ### Quick start
 
@@ -123,7 +123,7 @@ In this case, the amplicon structure is shown below.
 Similar to case 1, you can use the `--rev_barcode_fasta` argument to supply the barcode FASTA file and use the `--amp_seq_fasta` argument to supply reference amplicon FASTA file. Please note that **the `--amp_seq_fasta` file should INCLUDE the primer sequence but EXCLUDE the barcode sequence**.  An example command is shown below: 
 
 ```
-/home/fangl/git_repo/push/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --rev_barcode_fasta example_barcodes.fasta --minimap2 /home/fangl/software/minimap2-2.8_x64-linux/minimap2
+/home/fangl/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --rev_barcode_fasta example_barcodes.fasta --minimap2 /home/fangl/software/minimap2-2.8_x64-linux/minimap2
 ```
 
 #### Case 3. The barcodes are on both ends. One sample have the same barcodes on both ends. Only one barcode is required to bin the reads.
@@ -133,7 +133,7 @@ This might be the most common case. In this case, the amplicon structure is show
 You can supply `--fwd_barcode_fasta` and `--rev_barcode_fasta` with the same file, and use the `--amp_seq_fasta` argument to supply reference amplicon FASTA file. Please note that **the `--amp_seq_fasta` file should INCLUDE the primer sequence but EXCLUDE the barcode sequence**.  An example command is shown below: 
 
 ```
-/home/fangl/git_repo/push/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --fwd_barcode_fasta example_barcodes.fasta --rev_barcode_fasta example_barcodes.fasta --minimap2 /home/fangl/software/minimap2-2.8_x64-linux/minimap2
+/home/fangl/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --fwd_barcode_fasta example_barcodes.fasta --rev_barcode_fasta example_barcodes.fasta --minimap2 /home/fangl/software/minimap2-2.8_x64-linux/minimap2
 ```
 
 #### Case 4. The barcodes are on both ends. One sample may or may not have the same barcodes on both ends. Two barcodes are required to bin the reads.
@@ -143,10 +143,67 @@ This might be the most common case. In this case, the amplicon structure is show
 You can supply `--fwd_barcode_fasta` and `--rev_barcode_fasta` with the barcode FASTA file. The `--fwd_barcode_fasta` and `--rev_barcode_fasta` file may or may not be the same. **You want to use the `--require_two_barcodes` option to specify that two barcodes are required to bin the reads.**  You can use the `--amp_seq_fasta` argument to supply reference amplicon FASTA file. Please note that **the `--amp_seq_fasta` file should INCLUDE the primer sequence but EXCLUDE the barcode sequence**.  An example command is shown below: 
 
 ```
-/home/fangl/git_repo/push/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --fwd_barcode_fasta example_barcodes.fasta --rev_barcode_fasta example_barcodes.fasta --require_two_barcodes --minimap2 /home/fangl/software/minimap2-2.8_x64-linux/minimap2
+/home/fangl/AmpBinner/ampBinner.py --in_fq example_data.fastq.gz --amp_seq_fasta example_amplicon_seq.fasta --out_dir . --exp_name testing --num_threads 4 --fwd_barcode_fasta example_barcodes.fasta --rev_barcode_fasta example_barcodes.fasta --require_two_barcodes --minimap2 /home/fangl/software/minimap2-2.8_x64-linux/minimap2
 ```
 
+### Demultiplexing 10X Genomics Chromium Single Cell 3ʹ Gene Expression Libraries
+A 10X Genomics Chromium Single Cell 3ʹ Gene Expression Library often has several thousands of cellular barcodes. AmpBinner uses the sequence upstream of the barcode to help locate barcode position and eliminates random matching due to sequencing error. We provided a separate script file `ampBinner_10X.py` for 10X single cell libraries. The structure of the 10X Genomics single cell library is shown below. 
+<p align="center"><img src="images/10X_lib.png" width="100%"></p>
 
-### Demultiplexing 10X Genomics Chromium single cell libraries
+```
+$ ./ampBinner_10X.py --help 
+usage: ampBinner_10X.py [-h] [--in_fq FILE] [--in_fq_list FILE] --barcode_list
+                        FILE --barcode_upstream_seq STRING --out_prefix PATH
+                        [--num_threads INT] [--minimap2 FILE] [--version]
 
+A barcode demultiplexer for Oxford Nanopore long-read sequencing data with 10X
+Genomics Chromium barcodes
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --in_fq FILE          input sequencing reads in one FASTQ(.gz) file
+  --in_fq_list FILE     a list file specifying all input FASTQ(.gz) files, one
+                        file per line
+  --barcode_list FILE   a list file of all barcode sequences, one barcode
+                        sequence per line, no barcode name
+  --barcode_upstream_seq STRING
+                        known upstream sequence of the barcode
+  --out_prefix PATH     prefix of output files
+  --num_threads INT     number of threads (default: 1)
+  --minimap2 FILE       path to minimap2 (default: using environment default)
+  --version             show program's version number and exit
+```
+
+If you have one single input fastq file, you can supply the input with `--in_fq`. 
+If you have multiple fastq files, you can supply a list file with `--in_fq_list`. The list file contains all input fastq files, one file per line. 
+
+The barcode upstream sequence can be supplied with the `--barcode_upstream_seq` argument. It can be either the TruSeq Read1 sequence or the concatenation of the P5 sequence and the TruSeq Read1 sequence. 
+
+The barcode list file is supplied via the `--barcode_list` argument. The barcode list file should contain all barcodes of the specific sample, one barcode sequence per line (No barcode name). An example of the barcode list file is shown below. 
+
+
+```
+AAACCCACACATCATG
+AAACCCACATCATTGG
+AAACCCAGTAGTTCCA
+AAACCCAGTCGTTATG
+AAACCCAGTGCGGATA
+AAACCCAGTTCTTAGG
+AAACCCATCATGAGTC
+AAACCCATCTACTCAT
+AAACGAAAGGTAGTAT
+AAACGAACAACCCTAA
+```
+
+An example command is: 
+
+```
+/home/fangl/AmpBinner/ampBinner_10X.py --in_fq example.fastq.gz --barcode_list barcodes.txt --barcode_upstream_seq AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT --out_prefix testing --num_threads 8 
+```
+
+`ampBinner_10X.py` will generate 3 files: `testing.demultiplexing.PASS.reads.txt`, `testing.demultiplexing.statistics.txt` and `testing.all_reads.txt`.
+
+`testing.demultiplexing.PASS.reads.txt` contains the barcodes of QC-passed reads. 
+`testing.all_reads.txt` contains the barcodes of all reads (including QC-passed and QC-failed reads). 
+`testing.demultiplexing.statistics.txt` is a summary file with number of reads per barcode. 
 
