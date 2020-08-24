@@ -42,7 +42,7 @@ def parse_user_arguments():
     ### required arguments ###
     parser.add_argument('--in_fq', required = False, metavar = 'FILE', type = str, default = '', help = 'input sequencing reads in one FASTQ(.gz) file')
     parser.add_argument('--in_fq_list', required = False, metavar = 'FILE', type = str, default = '', help = 'a list file specifying all input FASTQ(.gz) files, one file per line')
-    parser.add_argument('--barcode_list', required = True, metavar = 'FILE', type = str, default = '', help = 'a list file of all barcode sequences, one barcode sequence per line, no barcode name')
+    parser.add_argument('--barcode_list', required = True, metavar = 'FILE', type = str, default = '', help = 'a list file of all barcode sequences, one barcode sequence per line (no barcode name)')
     parser.add_argument('--barcode_upstream_seq', required = True, metavar = 'STRING', type = str, default = '', help = 'known upstream sequence of the barcode')
     parser.add_argument('--out_prefix', required = True, metavar = 'PATH', type = str, help ='prefix of output files')
 
@@ -153,7 +153,7 @@ def merge_thread_summary_file(num_threads, out_prefix):
     final_all_read_barcode_fp = open(final_all_read_barcode_file, 'w')
     final_all_read_barcode_fp.write(header)
     final_all_read_barcode_fp.close()
-    
+
     cmd = 'cat '
     for f in out_file_list:
         cmd += ' %s ' % f
