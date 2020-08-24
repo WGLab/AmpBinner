@@ -110,18 +110,14 @@ def AmpliconBinner(input_args):
 
     fwd_barcode_info       = BarcodeInfo()
     rev_barcode_info       = BarcodeInfo()
-    fwd_only_out_dir    = os.path.join(input_args.out_dir, 'fwd_barcode_demultiplexing_results')
-    rev_only_out_dir    = os.path.join(input_args.out_dir, 'rev_barcode_demultiplexing_results')
-
-    fwd_barcode_out_prefix = os.path.join(fwd_only_out_dir, input_args.exp_name)
-    rev_barcode_out_prefix = os.path.join(rev_only_out_dir, input_args.exp_name)
+   
+    fwd_barcode_out_prefix = os.path.join(input_args.out_dir, input_args.exp_name) + '.fwd'
+    rev_barcode_out_prefix = os.path.join(input_args.out_dir, input_args.exp_name) + '.rev'
 
     if input_args.fwd_barcode_fasta != '' and input_args.rev_barcode_fasta == '':
         mode = 'fwd_only'
-        tk.create_dir(fwd_only_out_dir)
     elif input_args.fwd_barcode_fasta == '' and input_args.rev_barcode_fasta != '':
         mode = 'rev_only'
-        tk.create_dir(rev_only_out_dir)
     elif input_args.fwd_barcode_fasta != '' and input_args.rev_barcode_fasta != '':
         if input_args.require_two_barcodes:
             mode = 'both2'
@@ -153,12 +149,12 @@ def AmpliconBinner(input_args):
             tk.eprint('''NOTICE: If you have barcodes on both ends and want to require barcode matching on both ends, please supply '--require_two_barcodes'. ''')
             sys.exit(1)
 
-        both1_out_prefix = os.path.join(input_args.out_dir, input_args.exp_name)
+        both1_out_prefix = os.path.join(input_args.out_dir, input_args.exp_name) + '.require1barcode'
         out_fastq_file_list = output_binned_reads_both1(in_fastq_file, fwd_barcode_info, rev_barcode_info, both1_out_prefix)
         remove_empty_out_fastq_file(out_fastq_file_list)
 
     elif mode == 'both2':
-        both2_out_prefix = os.path.join(input_args.out_dir, input_args.exp_name)
+        both2_out_prefix = os.path.join(input_args.out_dir, input_args.exp_name) + '.require2barcodes'
         out_fastq_file_list = output_binned_reads_both2(in_fastq_file, fwd_barcode_info, rev_barcode_info, both2_out_prefix)
         remove_empty_out_fastq_file(out_fastq_file_list)
    

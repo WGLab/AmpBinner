@@ -42,9 +42,9 @@ def parse_user_arguments():
     ### required arguments ###
     parser.add_argument('--in_fq', required = False, metavar = 'FILE', type = str, default = '', help = 'input sequencing reads in one FASTQ(.gz) file')
     parser.add_argument('--in_fq_list', required = False, metavar = 'FILE', type = str, default = '', help = 'a list file specifying all input FASTQ(.gz) files, one file per line')
-
+    parser.add_argument('--barcode_list', required = True, metavar = 'FILE', type = str, default = '', help = 'a list file of all barcode sequences, one barcode sequence per line, no barcode name')
+    parser.add_argument('--barcode_upstream_seq', required = True, metavar = 'STRING', type = str, default = '', help = 'known upstream sequence of the barcode')
     parser.add_argument('--out_prefix', required = True, metavar = 'PATH', type = str, help ='prefix of output files')
-    parser.add_argument('--barcode_info', required = True, metavar = 'FILE', type = str,  default = '', help ='barcode information file')
 
     ### optional arguments ###
     parser.add_argument('--num_threads', required = False, metavar = 'INT', type = int, default = 1, help ='number of threads (default: 1)')
@@ -69,21 +69,26 @@ def main():
         tk.eprint('ERROR! --in_fq and --in_fq_list should not be supplied at the same time.')
         sys.exit()
 
+    
+    if input_args.minimap2 != 'minimap2':
+        tk.check_input_file_exists(input_args.minimap2)
+        input_args.minimap2 = os.path.abspath(input_args.minimap2)
+        
+    tk.check_input_file_exists(input_args.barcode_list)
+    input_args.barcode_list == os.path.abspath(input_args.barcode_list)
+    input_args.out_prefix = os.path.abspath(input_args.out_prefix)
+
     AmpliconBinner_10X(input_args)
 
 def AmpliconBinner_10X(input_args):
-
-    if input_args.minimap2 != 'minimap2':
-        input_args.minimap2 = os.path.abspath(input_args.minimap2)
-
-    input_args.out_prefix = os.path.abspath(input_args.out_prefix)
+    
     tmp_out_prefix = input_args.out_prefix + '.tmp'
 
     num_threads   = input_args.num_threads
     minimap2      = input_args.minimap2
 
     barcode_info = BarcodeInfo()
-    barcode_info.init_from_file(input_args.barcode_info)
+    barcode_info.init(input_args.barcode_list, input_args.barcode_upstream_seq)
 
     raw_input_fq_list = list()
     if input_args.in_fq != '': 
@@ -136,14 +141,23 @@ def merge_thread_summary_file(num_threads, out_prefix):
         out_stat_file_list.append(out_stat_file)
         out_all_read_barcode_file_list.append(out_all_read_barcode_file)
 
-    final_out_file = out_prefix + '.demultiplexing.reads.txt'
+    final_out_file = out_prefix + '.demultiplexing.PASS.reads.txt'
     final_out_stat_file = out_prefix + '.demultiplexing.statistics.txt'
     final_all_read_barcode_file = out_prefix + '.all_reads.txt'
 
+    header = '#readname\tbest_matched_barcode\tnum_edit_bases\tmismatch|insertion|deletion\tstrand\tsecond_best_matched_barcode\tnum_edit_bases\tmismatch|insertion|deletion\tstrand\n'
+    final_out_fp = open(final_out_file, 'w')
+    final_out_fp.write(header)
+    final_out_fp.close()
+
+    final_all_read_barcode_fp = open(final_all_read_barcode_file, 'w')
+    final_all_read_barcode_fp.write(header)
+    final_all_read_barcode_fp.close()
+    
     cmd = 'cat '
     for f in out_file_list:
         cmd += ' %s ' % f
-    cmd += ' > %s' % final_out_file
+    cmd += ' >> %s' % final_out_file
     ret = os.system(cmd)
     if ret != 0: 
         tk.eprint('ERROR: Failed to run command: %s' % cmd)
@@ -176,6 +190,7 @@ def merge_thread_summary_file(num_threads, out_prefix):
     
     barcode_count_sorted_list = sorted(barcode_count_dict.items(), key=lambda x: x[1], reverse = True)
     final_out_stat_fp = open(final_out_stat_file, 'w')
+    final_out_stat_fp.write('#cellular_barcode_seq\tnum_reads\n')
     for x in barcode_count_sorted_list:
         final_out_stat_fp.write('%s\t%d\n' % (x[0], x[1]))
     final_out_stat_fp.close()
@@ -604,42 +619,13 @@ class BarcodeInfo:
             self.downstream_seq = self.downstream_seq[0:self.anchor_seq_len]
         return
     
-    def init_from_file(self, barcode_info_file):
+    def init(self, barcode_list_file, barcode_upstream_seq):
 
-        barcode_info_fp = open(barcode_info_file, 'r')
-        lines = list(barcode_info_fp)
-        barcode_info_fp.close()
-        for line in lines:
-            line = line.strip()
-            if not line: continue ## skip empty lines
-            col_list = line.strip().split('=')
-            if len(col_list) != 2:
-                tk.eprint('ERROR: unknown format in barcode info file: %s\nKEY and VALUE should be seperated by \'=\'' % barcode_info_file)
-                sys.exit()
-
-            key = col_list[0].upper()
-            value = col_list[1]
-            if key == 'UPSTREAM_SEQ':
-                self.upstream_seq = value
-            elif key == 'BARCODE_LIST':
-                self.barcode_list_file = os.path.abspath(value)
-            elif key == 'DOWNSTREAM_SEQ':
-                self.downstream_seq = value
-            else:
-                tk.eprint('ERROR: unknown KEY: %s' % key)
-                tk.eprint('barcode_info file is: %s' % barcode_info_file)
-                sys.exit()
-
-        if self.upstream_seq == '' and self.downstream_seq == '':
-            tk.eprint('ERROR: both UPSTREAM_SEQ and DOWNSTREAM_SEQ are empty!')
-            sys.exit()
-        
-        if self.barcode_list_file == '':
-            tk.eprint('ERROR: BARCODE_LIST is empty!')
-            sys.exit()
-            
+        self.barcode_list_file = barcode_list_file
         self.read_barcode_list_file()
+        self.upstream_seq = barcode_upstream_seq
         self.apply_anchor_len()
+
         return
 
     def read_barcode_list_file(self):
@@ -682,9 +668,11 @@ class AlignmentInfo:
     def output(self):
         return '%s\t%d\t%d|%d|%d\t%d' % (self.barcode, self.num_edit_bases, self.num_mismatch, self.num_ins, self.num_del, self.strand)
 
+    '''
     def pmf(self):
         barcode_len = len(self.barcode)
         return scipy.stats.binom.pmf(self.num_edit_bases, barcode_len, 0.05)
+    '''
 
     def calculate_total_num_mismatches(self):
         cigar_opr_list, cigar_opr_len_list = tk.analysis_cigar_string(self.cigar)

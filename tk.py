@@ -41,6 +41,13 @@ def create_dir(dir):
             sys.exit()
     return
 
+def check_input_file_exists(in_file):
+
+    if os.path.exists(in_file) == False:
+        eprint('ERROR! file does not exist: %s' % in_file)
+        sys.exit()
+
+    return
 
 def eprint(message):
     sys.stderr.write('[' + datetime.now().strftime(TimeFormat) + '] ' + message + '\n')
