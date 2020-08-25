@@ -1,3 +1,29 @@
+
+'''
+Copyright (c) 2020 Children's Hospital of Philadelphia
+Author: Li Fang (https://github.com/fangli08)
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+'''
+
 import os
 import sys
 
@@ -15,6 +41,7 @@ def read_list_file(in_list_file, abspath = False):
     in_list_fp.close()
 
     for line in lines:
+        line = line.strip()
         if abspath == True:
             line = os.path.abspath(line)
             out_list.append(line)
@@ -107,8 +134,10 @@ def split_fastq(in_fastq_file_list, num_out_file, out_prefix):
         in_fastq_fp = gzopen(in_fastq_file)
 
         i = 0
+        status = 0
         while 1:
-            line1 = in_fastq_fp.readline()
+            if status == 0:
+                line1 = in_fastq_fp.readline()
             line2 = in_fastq_fp.readline()
             line3 = in_fastq_fp.readline()
             line4 = in_fastq_fp.readline()
@@ -116,6 +145,11 @@ def split_fastq(in_fastq_file_list, num_out_file, out_prefix):
             if not line2: break
             if not line3: break
             if not line4: break
+
+            if line1[0] != '@' or len(line2) != len(line4) or line3.strip() != '+':
+                eprint('ERROR! Bad fastq file: %s' % in_fastq_file)
+                break
+                
 
             i += 1
             file_id = i % num_out_file
@@ -152,6 +186,11 @@ def extract_fastq_tail_seq(in_fastq_file, read_tail_length, left_tail_fastq_file
         if not line3: break
         if not line4: break
 
+        if line1[0] != '@' or len(line2) != len(line4) or line3.strip() != '+':
+            eprint('ERROR! bad fastq record: ')
+            eprint(line1 + line2 + line3 + line4)
+            sys.exit()
+        
         read_seq  = line2.strip()
         read_qual = line4.strip()
 
