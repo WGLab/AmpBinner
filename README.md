@@ -26,7 +26,7 @@
 
 ## <a name="Installation"></a>Installation
 
-AmpBinner calls `minimap2` to do sequence alignment. If you don't have `minimap2` in you system, you can install it following the instructions [here](https://github.com/lh3/minimap2#install).  
+AmpBinner calls `minimap2` to do sequence alignment. If you don't have `minimap2` in your system, you can install it following the instructions [here](https://github.com/lh3/minimap2#install).  
 If you are using Linux, you can acquire precompiled binaries using the following commands:
 
 ```
