@@ -223,3 +223,7 @@ An example command is:
 `testing.all_reads.txt` contains the barcodes of all reads (including QC-passed and QC-failed reads). 
 `testing.demultiplexing.statistics.txt` is a summary file with number of reads per barcode. 
 
+#### Limitation
+`ampBinner_10X.py` has been tested samples with less than 10,000 barcodes. You'd better have a short-read 10X Genomics sequencing data so that you can narrow down the barcode list to a few thousand. `ampBinner_10X.py` will not work well on a large barcode list (e.g. the complete barcode list which has > 1 million barcodes).  
+
+
