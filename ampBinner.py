@@ -56,6 +56,8 @@ def parse_user_arguments():
     parser.add_argument('--rev_barcode_fasta', required = False, metavar = 'FILE', type = str,  default = '', help ='barcode sequences of the reverse primer (in FASTA format)')
     parser.add_argument('--require_two_barcodes', action='store_true', help='''require matched barcodes on both ends (default: False). Notice: this option is valid only if both '--fwd_barcode_fasta' and '--rev_barcode_fasta' are supplied.''')
     ### optional arguments ###
+    parser.add_argument('--anchor_seq_len', required = False, metavar = 'INT', type = int, default = 256, help ='anchor sequence length (default: 256)')
+    
     parser.add_argument('--num_threads', required = False, metavar = 'INT', type = int, default = 1, help ='number of threads (default: 1)')
     parser.add_argument('--minimap2', required = False, metavar = 'FILE', type = str, default = 'minimap2', help ='path to minimap2 (default: using environment default)')    
     parser.add_argument('--version', action='version', version='%(prog)s 0.4.0')
@@ -108,9 +110,12 @@ def AmpliconBinner(input_args):
     tk.create_dir(input_args.out_dir)
     in_fastq_file = preprocessing_input_files(input_args.in_fq, input_args.in_fq_list, tmp_out_prefix)
 
-    fwd_barcode_info       = BarcodeInfo()
-    rev_barcode_info       = BarcodeInfo()
-   
+    fwd_barcode_info       = BarcodeInfo(input_args.anchor_seq_len)
+    rev_barcode_info       = BarcodeInfo(input_args.anchor_seq_len)
+    
+    print(f'fwd_barcode_info.anchor_seq_len={fwd_barcode_info.anchor_seq_len}')
+    print(f'rev_barcode_info.anchor_seq_len={rev_barcode_info.anchor_seq_len}')
+    
     fwd_barcode_out_prefix = os.path.join(input_args.out_dir, input_args.exp_name) + '.fwd'
     rev_barcode_out_prefix = os.path.join(input_args.out_dir, input_args.exp_name) + '.rev'
 
@@ -176,7 +181,7 @@ def remove_empty_out_fastq_file(out_fastq_file_list):
             try: 
                 os.remove(out_fastq_file)
             except:
-                eprint('WARNING: failed to remove empty file: %s' % out_fastq_file)
+                tk.eprint('WARNING: failed to remove empty file: %s' % out_fastq_file)
     return
 
 def output_binned_reads_both2(in_fastq_file, fwd_barcode_info, rev_barcode_info, out_prefix):
@@ -627,7 +632,7 @@ def extract_fastq_tail_seq(in_fastq_file, read_tail_length, min_read_length, max
 
 
 class BarcodeInfo:
-    def __init__(self):
+    def __init__(self, anchor_seq_len):
         self.downstream_seq = ''
         self.barcode_fasta_file = ''
         self.amplicon_seq_fasta_file = ''
@@ -636,7 +641,7 @@ class BarcodeInfo:
         self.side = ''
         self.barcode_name_list = list()
         self.barcode_seq_list = list()
-        self.anchor_seq_len = 256
+        self.anchor_seq_len = anchor_seq_len
         self.barcode_plus_seq_to_barcode_idx_dict = dict()
         self.read_barcode_idx_dict = dict()
         return

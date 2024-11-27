@@ -221,7 +221,7 @@ def extract_fastq_tail_seq(in_fastq_file, read_tail_length, left_tail_fastq_file
 
 def rev_comp(seq):
 
-    complement  = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'a': 't', 'c': 'g', 'g': 'c', 't': 'a'}
+    complement  = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'N': 'N', 'a': 't', 'c': 'g', 'g': 'c', 't': 'a', 'n': 'n'}
     rev_seq = ''.join(reversed(seq))
 
     rev_comp_seq = ''
